@@ -1,0 +1,30 @@
+
+name: AI News Generator
+
+on:
+  workflow_dispatch:
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+
+      - name: Set up Python
+        run: uv python install 3.12
+
+      - name: Generate AI news
+        env:
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+        run: uv run python src/main.py
+
+      - name: Upload result
+        uses: actions/upload-artifact@v4
+        with:
+          name: ai-news-result
+          path: docs/news.json
