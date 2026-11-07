@@ -2,54 +2,67 @@
 import os
 import json
 from pathlib import Path
+from openai import OpenAI
 
-from google import genai
-from google.genai import types
+api_key = os.environ.get("OPENROUTER_API_KEY")
 
-def main():
-    api_key = os.environ.get("GEMINI_API_KEY")
+if not api_key:
+    raise RuntimeError("找不到 OPENROUTER_API_KEY")
 
-    if not api_key:
-        raise RuntimeError("找不到 GEMINI_API_KEY")
+client = OpenAI(
+    base_url="https://openrouter.ai/api/v1",
+    api_key=api_key,
+)
 
-    client = genai.Client(api_key=api_key)
+news = """
+標題：人工智慧在教育領域的應用
+內容：越來越多學校使用人工智慧協助教學，
+包括個人化學習、智慧批改與課程規劃。
+"""
 
-    news = """
-    新聞標題：人工智慧在教育領域的應用
-    新聞內容：越來越多學校使用人工智慧協助教學，
-    包括個人化學習、智慧批改與課程規劃。
-    """
+print("正在呼叫免費雲端 AI...")
 
-    schema = {
-        "type": "object",
-        "properties": {
-            "title": {"type": "string"},
-            "summary": {"type": "string"},
-            "category": {"type": "string"}
+stream = client.chat.completions.create(
+    model="openrouter/free",
+    messages=[
+        {
+            "role": "system",
+            "content": "你是專業新聞編輯，使用繁體中文回答。"
         },
-        "required": ["title", "summary", "category"]
-    }
+        {
+            "role": "user",
+            "content": (
+                "請根據以下新聞撰寫100字以內的繁體中文摘要，"
+                "只輸出摘要文字：\n" + news
+            )
+        }
+    ],
+    stream=True,
+)
 
-    response = client.models.generate_content(
-        model="gemini-2.5-flash",
-        contents="請將以下新聞整理成繁體中文摘要：" + news,
-        config=types.GenerateContentConfig(
-            response_mime_type="application/json",
-            response_json_schema=schema
-        )
-    )
+summary = ""
 
-    result = json.loads(response.text)
+for chunk in stream:
+    if chunk.choices:
+        content = chunk.choices[0].delta.content
+        if content:
+            summary += content
+            print(content, end="", flush=True)
 
-    Path("docs").mkdir(exist_ok=True)
-    Path("docs/news.json").write_text(
-        json.dumps(result, ensure_ascii=False, indent=2),
-        encoding="utf-8"
-    )
+if not summary.strip():
+    raise RuntimeError("AI 沒有產生摘要")
 
-    print("AI 新聞摘要產生成功！")
-    print(json.dumps(result, ensure_ascii=False, indent=2))
+result = {
+    "title": "人工智慧在教育領域的應用",
+    "summary": summary.strip(),
+    "model": "openrouter/free"
+}
 
+Path("docs").mkdir(exist_ok=True)
 
-if __name__ == "__main__":
-    main()
+Path("docs/news.json").write_text(
+    json.dumps(result, ensure_ascii=False, indent=2),
+    encoding="utf-8"
+)
+
+print("\nAI 新聞摘要產生成功！")
