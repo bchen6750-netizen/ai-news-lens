@@ -1,0 +1,117 @@
+
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1">
+  <title>AI NewsLens｜人工智慧新聞鏡頭</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f7fb;
+      color: #1e293b;
+      margin: 0;
+    }
+    header {
+      background: #142b50;
+      color: white;
+      padding: 42px 20px;
+      text-align: center;
+    }
+    main {
+      max-width: 850px;
+      margin: 30px auto;
+      padding: 0 20px;
+    }
+    section {
+      background: white;
+      border-radius: 14px;
+      padding: 25px;
+      margin-bottom: 20px;
+      box-shadow: 0 3px 15px #0000000a;
+    }
+    h2 { color: #2563eb; }
+    footer {
+      text-align: center;
+      padding: 25px;
+      color: #64748b;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>AI NewsLens</h1>
+    <p>人工智慧新聞鏡頭｜AI 新聞摘要系統</p>
+  </header>
+
+  <main>
+    <section>
+      <h2>專題介紹</h2>
+      <p>
+        本專題使用 Python、uv 與 OpenRouter
+        雲端 AI 模型，將新聞內容自動整理為
+        繁體中文摘要。
+      </p>
+    </section>
+
+    <section>
+      <h2>AI 新聞摘要</h2>
+      <h3 id="title">載入中...</h3>
+      <p id="summary"></p>
+    </section>
+
+    <section>
+      <h2>怎麼執行？</h2>
+      <p>
+        使用 uv 安裝 Python 相依套件，
+        透過 GitHub Actions 執行：
+      </p>
+      <code>uv run python src/main.py</code>
+    </section>
+
+    <section>
+      <h2>AI 使用說明</h2>
+      <p>
+        使用 OpenRouter 免費雲端模型，
+        並透過 Streaming 串流方式取得
+        AI 產生的繁體中文摘要。
+      </p>
+    </section>
+
+    <section>
+      <h2>執行結果</h2>
+      <p>
+        GitHub Actions 已成功執行 Python，
+        並產生 AI 新聞摘要 JSON 檔案。
+      </p>
+    </section>
+  </main>
+
+  <footer>
+    AI NewsLens © 2026
+  </footer>
+
+  <script>
+    fetch("./news.json")
+      .then(response => {
+        if (!response.ok) {
+          throw new Error("找不到新聞資料");
+        }
+        return response.json();
+      })
+      .then(data => {
+        document.getElementById("title").textContent =
+          data.title;
+        document.getElementById("summary").textContent =
+          data.summary;
+      })
+      .catch(() => {
+        document.getElementById("title").textContent =
+          "新聞資料尚未產生";
+        document.getElementById("summary").textContent =
+          "請執行 GitHub Actions 更新摘要。";
+      });
+  </script>
+</body>
+</html>
